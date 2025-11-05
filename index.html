@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Best Notepad</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <h1>Best Notepad</h1>
+    <div class="controls">
+      <input type="text" id="searchInput" placeholder="Search notes…">
+      <button id="addNoteBtn" class="primary-btn">New Note</button>
+    </div>
+  </header>
+  
+  <main>
+    <!-- Container where all notes will be listed -->
+    <ul id="notesList"></ul>
+  </main>
+
+  <!-- Modal for adding/editing notes -->
+  <div id="noteModal" class="modal hidden">
+    <div class="modal-content">
+      <h2 id="modalTitle">Add New Note</h2>
+      <form id="noteForm">
+        <!-- Hidden field to store the ID of the note being edited -->
+        <input type="hidden" id="noteId" name="noteId">
+
+        <label for="noteTitle">Title</label>
+        <input type="text" id="noteTitle" name="noteTitle" placeholder="Note title (optional)">
+        
+        <label for="noteContent">Content</label>
+        <textarea id="noteContent" name="noteContent" rows="8" placeholder="Write your note here…"></textarea>
+        
+        <div class="modal-actions">
+          <button type="button" id="cancelBtn" class="secondary-btn">Cancel</button>
+          <button type="submit" id="saveBtn" class="primary-btn">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
