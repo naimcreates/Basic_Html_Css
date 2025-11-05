@@ -291,3 +291,91 @@ body.dark-mode .primary-btn:hover {
 body.dark-mode .secondary-btn:hover {
   background-color: #666;
 }
+
+
+/* Tasks (to-do list) section styles */
+#tasksSection {
+  margin-top: 40px;
+}
+
+#tasksSection h2 {
+  margin-bottom: 10px;
+}
+
+#taskForm {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+#taskForm input[type="text"],
+#taskForm input[type="date"] {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+#tasksTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+#tasksTable th,
+#tasksTable td {
+  padding: 8px;
+  border: 1px solid #ddd;
+  text-align: left;
+}
+
+#tasksTable th {
+  background-color: #f5f5f5;
+}
+
+.task-overdue {
+  background-color: #ffe6e6;
+}
+
+#tasksTable button {
+  padding: 4px 8px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+#tasksTable .complete-btn {
+  background-color: #4caf50;
+  color: white;
+}
+
+#tasksTable .complete-btn:hover {
+  background-color: #3e8e41;
+}
+
+#tasksTable .delete-btn {
+  background-color: #f44336;
+  color: white;
+}
+
+#tasksTable .delete-btn:hover {
+  background-color: #d32f2f;
+}
+
+/* Dark mode styles for tasks */
+body.dark-mode #tasksTable th {
+  background-color: #2a2a2a;
+}
+
+body.dark-mode #tasksTable td,
+body.dark-mode #taskForm input[type="text"],
+body.dark-mode #taskForm input[type="date"] {
+  background-color: #1e1e1e;
+  color: #e0e0e0;
+  border-color: #444;
+}
+
+body.dark-mode .task-overdue {
+  background-color: #402020;
+}
