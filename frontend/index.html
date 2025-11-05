@@ -12,6 +12,7 @@
     <div class="controls">
       <input type="text" id="searchInput" placeholder="Search notes…">
       <button id="addNoteBtn" class="primary-btn">New Note</button>
+              <button id="toggleDarkMode" class="secondary-btn">Dark Mode</button>
     </div>
   </header>
   
@@ -30,6 +31,8 @@
 
         <label for="noteTitle">Title</label>
         <input type="text" id="noteTitle" name="noteTitle" placeholder="Note title (optional)">
+                <label for="noteTags">Tags</label>
+        <input type="text" id="noteTags" name="noteTags" placeholder="e.g. work, personal">
         
         <label for="noteContent">Content</label>
         <textarea id="noteContent" name="noteContent" rows="8" placeholder="Write your note here…"></textarea>
