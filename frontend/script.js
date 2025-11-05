@@ -1,7 +1,4 @@
-// frontend/script.js
-// Connects the notepad UI to a backend API (Node.js + Express)
-
-const API_BASE = 'http://localhost:4000/api';
+// Use localStorage to store notes so the notepad works without a backend API
 
 // Element references
 const notesListEl = document.getElementById('notesList');
@@ -15,170 +12,132 @@ const noteIdInput = document.getElementById('noteId');
 const noteTitle   = document.getElementById('noteTitle');
 const noteContent = document.getElementById('noteContent');
 
-// State
+// Key used in localStorage
+const STORAGE_KEY = 'notes';
+
+// State: array of all notes
 let allNotes = [];
 
-// Helper to call the backend API and handle JSON
-async function fetchJSON(url, options = {}) {
-  const res = await fetch(url, {
-    headers: { 'Content-Type': 'application/json' },
-    ...options
-  });
-  if (!res.ok) {
-    // Try to parse error message, otherwise throw generic
-    let errorMsg;
-    try {
-      const data = await res.json();
-      errorMsg = data.error || res.statusText;
-    } catch (e) {
-      errorMsg = res.statusText;
-    }
-    throw new Error(errorMsg);
-  }
-  return res.status === 204 ? null : res.json();
+// Load notes from localStorage and render
+function loadNotes() {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  allNotes = saved ? JSON.parse(saved) : [];
+  renderNotes();
 }
 
-// Load notes from backend
-async function loadNotes() {
-  try {
-    allNotes = await fetchJSON(`${API_BASE}/notes`);
-    renderNotes();
-  } catch (err) {
-    console.error('Failed to load notes', err);
-    alert('Error loading notes. Please ensure the server is running.');
-  }
+// Save notes to localStorage
+function saveToStorage() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(allNotes));
 }
 
-// Render notes list with filtering
+// Generate a pseudo-unique ID for new notes
+function generateId() {
+  return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+}
+
+// Render the notes list with search filtering
 function renderNotes() {
-  const query = searchInput.value.trim().toLowerCase();
-  // Clear list
+  const q = searchInput.value.trim().toLowerCase();
+  const filtered = allNotes.filter(n =>
+    (n.title || '').toLowerCase().includes(q) ||
+    (n.content || '').toLowerCase().includes(q)
+  );
+
   notesListEl.innerHTML = '';
-  // Filter notes
-  const filtered = allNotes.filter(n => {
-    const title = n.title || '';
-    const content = n.content || '';
-    return (
-      title.toLowerCase().includes(query) ||
-      content.toLowerCase().includes(query)
-    );
-  });
-  // Create note elements
-  filtered.forEach(note => {
+  filtered.forEach(n => {
     const li = document.createElement('li');
     li.className = 'note-item';
-    // Header with title and actions
-    const head = document.createElement('div');
-    head.className = 'note-head';
-    const strong = document.createElement('strong');
-    strong.textContent = note.title || 'Untitled';
-    head.appendChild(strong);
-    const actions = document.createElement('div');
-    actions.className = 'actions';
-    // Edit button
-    const editBtn = document.createElement('button');
-    editBtn.textContent = 'Edit';
-    editBtn.className = 'edit-btn';
-    editBtn.onclick = () => openModal(note);
-    // Delete button
-    const deleteBtn = document.createElement('button');
-    deleteBtn.textContent = 'Delete';
-    deleteBtn.className = 'delete-btn';
-    deleteBtn.onclick = () => deleteNote(note.id);
-    actions.appendChild(editBtn);
-    actions.appendChild(deleteBtn);
-    head.appendChild(actions);
-    // Body with content snippet
-    const body = document.createElement('div');
-    body.className = 'note-body';
-    body.textContent = note.content;
-    // Append to list item
-    li.appendChild(head);
-    li.appendChild(body);
+    li.innerHTML = `
+      <div class="note-head"><strong>${escapeHTML(n.title || 'Untitled')}</strong>
+        <div class="actions">
+          <button class="btn edit">Edit</button>
+          <button class="btn danger delete">Delete</button>
+        </div>
+      </div>
+      <div class="note-body">${escapeHTML(n.content)}</div>
+    `;
+    li.querySelector('.edit').onclick   = () => openModal(n);
+    li.querySelector('.delete').onclick = () => deleteNote(n.id);
     notesListEl.appendChild(li);
   });
 }
 
-// Open modal for adding or editing a note
+// Open the modal for adding or editing a note
 function openModal(note = null) {
-  if (note) {
-    modalTitle.textContent = 'Edit Note';
-    noteIdInput.value = note.id;
-    noteTitle.value   = note.title || '';
-    noteContent.value = note.content || '';
-  } else {
-    modalTitle.textContent = 'Add New Note';
-    noteIdInput.value = '';
-    noteTitle.value = '';
-    noteContent.value = '';
-  }
+  modalTitle.textContent = note ? 'Edit Note' : 'Add New Note';
+  noteIdInput.value = note?.id ?? '';
+  noteTitle.value   = note?.title ?? '';
+  noteContent.value = note?.content ?? '';
   noteModal.style.display = 'flex';
-  noteTitle.focus();
 }
 
-// Close the modal and clear form
+// Close the modal and reset the form
 function closeModal() {
   noteModal.style.display = 'none';
   noteForm.reset();
   noteIdInput.value = '';
 }
 
-// Save note (create or update)
-async function saveNote(e) {
+// Handle form submission to save a note
+function saveNote(e) {
   e.preventDefault();
   const id = noteIdInput.value;
-  const payload = {
-    title: noteTitle.value.trim(),
-    content: noteContent.value.trim()
-  };
-  if (!payload.content) {
+  const title = noteTitle.value.trim();
+  const content = noteContent.value.trim();
+  if (!content) {
     alert('Content is required');
     return;
   }
-  try {
-    if (id) {
-      await fetchJSON(`${API_BASE}/notes/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(payload)
-      });
-    } else {
-      await fetchJSON(`${API_BASE}/notes`, {
-        method: 'POST',
-        body: JSON.stringify(payload)
-      });
+  if (id) {
+    // Update existing note
+    const index = allNotes.findIndex(n => n.id === id);
+    if (index !== -1) {
+      allNotes[index] = {
+        ...allNotes[index],
+        title,
+        content,
+        updated_at: new Date().toISOString()
+      };
     }
-    closeModal();
-    await loadNotes();
-  } catch (err) {
-    console.error('Error saving note', err);
-    alert('Error saving note.');
+  } else {
+    // Create new note
+    const now = new Date().toISOString();
+    allNotes.unshift({
+      id: generateId(),
+      title,
+      content,
+      created_at: now,
+      updated_at: now
+    });
   }
+  saveToStorage();
+  closeModal();
+  renderNotes();
 }
 
-// Delete a note
-async function deleteNote(id) {
-  if (!confirm('Are you sure you want to delete this note?')) return;
-  try {
-    await fetchJSON(`${API_BASE}/notes/${id}`, { method: 'DELETE' });
-    await loadNotes();
-  } catch (err) {
-    console.error('Error deleting note', err);
-    alert('Error deleting note.');
-  }
+// Delete a note by id after confirmation
+function deleteNote(id) {
+  if (!confirm('Delete this note?')) return;
+  allNotes = allNotes.filter(n => n.id !== id);
+  saveToStorage();
+  renderNotes();
 }
 
 // Escape HTML to prevent injection
-function escapeHTML(str) {
-  return str.replace(/[&<>"']/g, char => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-  }[char]));
+function escapeHTML(s) {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 // Event listeners
-addNoteBtn.addEventListener('click', () => openModal());
-cancelBtn.addEventListener('click', () => closeModal());
-noteForm.addEventListener('submit', saveNote);
-searchInput.addEventListener('input', renderNotes);
+addNoteBtn.onclick = () => openModal();
+cancelBtn.onclick  = () => closeModal();
+noteForm.onsubmit  = saveNote;
+searchInput.oninput = () => renderNotes();
 
-// Initialize
+// Initialize the app
 loadNotes();
