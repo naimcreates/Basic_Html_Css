@@ -11,9 +11,12 @@ const modalTitle  = document.getElementById('modalTitle');
 const noteIdInput = document.getElementById('noteId');
 const noteTitle   = document.getElementById('noteTitle');
 const noteContent = document.getElementById('noteContent');
+const noteTags    = document.getElementById('noteTags');
+const toggleDarkModeBtn = document.getElementById('toggleDarkMode');
 
-// Key used in localStorage
-const STORAGE_KEY = 'notes';
+// Keys used in localStorage
+const STORAGE_KEY   = 'notes';
+const DARK_MODE_KEY = 'darkMode';
 
 // State: array of all notes
 let allNotes = [];
@@ -40,13 +43,17 @@ function renderNotes() {
   const q = searchInput.value.trim().toLowerCase();
   const filtered = allNotes.filter(n =>
     (n.title || '').toLowerCase().includes(q) ||
-    (n.content || '').toLowerCase().includes(q)
+    (n.content || '').toLowerCase().includes(q) ||
+    (n.tags ? n.tags.join(' ').toLowerCase().includes(q) : false)
   );
 
   notesListEl.innerHTML = '';
   filtered.forEach(n => {
     const li = document.createElement('li');
     li.className = 'note-item';
+    const tagsHtml = (n.tags && n.tags.length)
+      ? `<div class="note-tags">${n.tags.map(t => `<span class="note-tag">${escapeHTML(t)}</span>`).join('')}</div>`
+      : '';
     li.innerHTML = `
       <div class="note-head"><strong>${escapeHTML(n.title || 'Untitled')}</strong>
         <div class="actions">
@@ -54,7 +61,7 @@ function renderNotes() {
           <button class="btn danger delete">Delete</button>
         </div>
       </div>
-      <div class="note-body">${escapeHTML(n.content)}</div>
+      <div class="note-body">${escapeHTML(n.content)}${tagsHtml}</div>
     `;
     li.querySelector('.edit').onclick   = () => openModal(n);
     li.querySelector('.delete').onclick = () => deleteNote(n.id);
@@ -65,9 +72,10 @@ function renderNotes() {
 // Open the modal for adding or editing a note
 function openModal(note = null) {
   modalTitle.textContent = note ? 'Edit Note' : 'Add New Note';
-  noteIdInput.value = note?.id ?? '';
-  noteTitle.value   = note?.title ?? '';
-  noteContent.value = note?.content ?? '';
+  noteIdInput.value   = note?.id ?? '';
+  noteTitle.value     = note?.title ?? '';
+  noteContent.value   = note?.content ?? '';
+  noteTags.value      = note?.tags ? note.tags.join(', ') : '';
   noteModal.style.display = 'flex';
 }
 
@@ -81,9 +89,10 @@ function closeModal() {
 // Handle form submission to save a note
 function saveNote(e) {
   e.preventDefault();
-  const id = noteIdInput.value;
-  const title = noteTitle.value.trim();
+  const id      = noteIdInput.value;
+  const title   = noteTitle.value.trim();
   const content = noteContent.value.trim();
+  const tags    = noteTags.value.split(',').map(t => t.trim()).filter(Boolean);
   if (!content) {
     alert('Content is required');
     return;
@@ -96,6 +105,7 @@ function saveNote(e) {
         ...allNotes[index],
         title,
         content,
+        tags,
         updated_at: new Date().toISOString()
       };
     }
@@ -106,6 +116,7 @@ function saveNote(e) {
       id: generateId(),
       title,
       content,
+      tags,
       created_at: now,
       updated_at: now
     });
@@ -129,15 +140,28 @@ function escapeHTML(s) {
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
+    .replace(/\"/g, '&quot;')
     .replace(/'/g, '&#39;');
 }
 
+// Initialize dark mode based on localStorage
+function initializeDarkMode() {
+  const isDark = localStorage.getItem(DARK_MODE_KEY) === 'true';
+  if (isDark) {
+    document.body.classList.add('dark-mode');
+  }
+}
+
 // Event listeners
-addNoteBtn.onclick = () => openModal();
-cancelBtn.onclick  = () => closeModal();
-noteForm.onsubmit  = saveNote;
-searchInput.oninput = () => renderNotes();
+addNoteBtn.onclick    = () => openModal();
+cancelBtn.onclick     = () => closeModal();
+noteForm.onsubmit     = saveNote;
+searchInput.oninput   = () => renderNotes();
+toggleDarkModeBtn.onclick = () => {
+  const isDark = document.body.classList.toggle('dark-mode');
+  localStorage.setItem(DARK_MODE_KEY, isDark);
+};
 
 // Initialize the app
+initializeDarkMode();
 loadNotes();
