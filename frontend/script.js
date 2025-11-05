@@ -165,3 +165,90 @@ toggleDarkModeBtn.onclick = () => {
 // Initialize the app
 initializeDarkMode();
 loadNotes();
+
+
+// ===== Task (to-do list) functionality =====
+const taskForm = document.getElementById('taskForm');
+const taskTitle = document.getElementById('taskTitle');
+const taskDueDate = document.getElementById('taskDueDate');
+const tasksBody = document.getElementById('tasksBody');
+
+const TASKS_KEY = 'tasks';
+let allTasks = [];
+
+function loadTasks() {
+  const saved = localStorage.getItem(TASKS_KEY);
+  allTasks = saved ? JSON.parse(saved) : [];
+  renderTasks();
+}
+
+function saveTasks() {
+  localStorage.setItem(TASKS_KEY, JSON.stringify(allTasks));
+}
+
+function renderTasks() {
+  tasksBody.innerHTML = '';
+  const today = new Date().toISOString().split('T')[0];
+  allTasks.forEach(task => {
+    const tr = document.createElement('tr');
+    // highlight overdue tasks
+    if (!task.completed && task.dueDate && task.dueDate < today) {
+      tr.classList.add('task-overdue');
+    }
+    tr.innerHTML = `
+      <td>${escapeHTML(task.title)}</td>
+      <td>${task.dueDate || ''}</td>
+      <td>${task.completed ? 'Completed' : 'Pending'}</td>
+      <td>
+        <button class="btn small complete">${task.completed ? 'Undo' : 'Complete'}</button>
+        <button class="btn small danger delete">Delete</button>
+      </td>
+    `;
+    tr.querySelector('.complete').onclick = () => toggleTaskComplete(task.id);
+    tr.querySelector('.delete').onclick = () => deleteTask(task.id);
+    tasksBody.appendChild(tr);
+  });
+}
+
+function addTask(e) {
+  e.preventDefault();
+  const title = taskTitle.value.trim();
+  const dueDate = taskDueDate.value;
+  if (!title) {
+    alert('Task title is required');
+    return;
+  }
+  allTasks.unshift({
+    id: generateId(),
+    title,
+    dueDate: dueDate || '',
+    completed: false
+  });
+  saveTasks();
+  taskForm.reset();
+  renderTasks();
+}
+
+function toggleTaskComplete(id) {
+  const index = allTasks.findIndex(t => t.id === id);
+  if (index !== -1) {
+    allTasks[index].completed = !allTasks[index].completed;
+    saveTasks();
+    renderTasks();
+  }
+}
+
+function deleteTask(id) {
+  if (!confirm('Delete this task?')) return;
+  allTasks = allTasks.filter(t => t.id !== id);
+  saveTasks();
+  renderTasks();
+}
+
+// Register task event listener
+if (taskForm) {
+  taskForm.onsubmit = addTask;
+}
+
+// Load tasks on initialization
+loadTasks();
