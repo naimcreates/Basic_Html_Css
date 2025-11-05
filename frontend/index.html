@@ -19,7 +19,24 @@
   <main>
     <!-- Container where all notes will be listed -->
     <ul id="notesList"></ul>
-  </main>
+  </m
+    
+    <!-- Tasks section -->
+    <section id="tasksSection">
+      <h2>To-Do List</h2>
+      <form id="taskForm">
+        <input type="text" id="taskTitle" name="taskTitle" placeholder="Task title" required>
+        <input type="date" id="taskDueDate" name="taskDueDate">
+        <button type="submit" id="addTaskBtn" class="primary-btn">Add Task</button>
+      </form>
+      <table id="tasksTable">
+        <thead>
+          <tr><th>Task</th><th>Due Date</th><th>Status</th><th>Actions</th></tr>
+        </thead>
+        <tbody id="tasksBody"></tbody>
+      </table>
+    </section>
+ain>
 
   <!-- Modal for adding/editing notes -->
   <div id="noteModal" class="modal hidden">
