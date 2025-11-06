@@ -1,5 +1,6 @@
 # Best Notepad
 
+
 Best Notepad is a simple, offline-friendly note-taking application built using pure HTML, CSS and vanilla JavaScript. It started as a basic notepad for creating and editing notes and has evolved into a more powerful tool with tags, dark mode and a built‑in to‑do list.
 
 ## Features
@@ -69,3 +70,8 @@ This project currently covers the essentials of a personal notebook. Future impr
 - Collaboration and real‑time editing.
 - User authentication and encryption.
 - Extensions/plugins for custom functionality.
+
+
+### Live Demo
+
+The latest version of this app is always available on GitHub Pages: [https://naimcreates.github.io/Basic_Html_Css/](https://naimcreates.github.io/Basic_Html_Css/). Open this link in your browser to use the notebook without any setup.
